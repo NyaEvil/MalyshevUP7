@@ -71,31 +71,31 @@ namespace MalyshevUP7
             con.Dispose();
         }
 
-        private void DataView_RowEditEnding(object sender, DataGridRowEditEndingEventArgs e)
+        private void save_Click(object sender, RoutedEventArgs e)
         {
-            string DTname = CurTable;
-            SqlConnection con = new SqlConnection("Data Source=(LocalDB)\\MSSQLLocalDB;Initial Catalog=MalyshevImport;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
-            con.Open();
-            string SCcom =$"SELECT * FROM {DTname}";
-            SqlDataAdapter adapter = new SqlDataAdapter(SCcom, con);
-            SqlCommandBuilder builder = new SqlCommandBuilder(adapter);
-            DataSet ds = new DataSet();
-            DataTable dt = new DataTable();
-            dt.Columns = DataView.Columns;
-            dt.TableName = DTname;
-            ds.Tables.Add(dt);
-            DataView.ItemsSource = null;
-            DataView.Columns.Clear();
-            System.Threading.Thread.Sleep(50);
-            DataView.ItemsSource = dt.DefaultView;
-            /*adapter.Update(ds, DTname);
-            ds.Clear();
-            adapter.Fill(ds);
-            DataView.ItemsSource = ds.Tables[0].DefaultView;
-            con.Close();
-            con.Dispose();*/
+            try
+            {
+                SqlConnection con = new SqlConnection("Data Source=(LocalDB)\\MSSQLLocalDB;Initial Catalog=MalyshevImport;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+                con.Open();
+                SqlCommand com = new SqlCommand($"DELETE FROM {CurTable}\r\nDBCC CHECKIDENT ({CurTable}, RESEED, -1)", con);
+                com.ExecuteNonQuery();
+                string SCcom = $"SELECT * FROM {CurTable}";
+                SqlDataAdapter adapter = new SqlDataAdapter(SCcom, con);
+                SqlCommandBuilder builder = new SqlCommandBuilder(adapter);
+                DataTable dt = new DataTable();
+                dt.TableName = CurTable;
+                dt = ((DataView)DataView.ItemsSource).ToTable();
+                adapter.Update(dt);
+                dt.Clear();
+                adapter.Fill(dt);
+                DataView.ItemsSource = dt.DefaultView;
+                con.Close();
+                con.Dispose();
+            }
+            catch (System.NullReferenceException)
+            {
+                MessageBox.Show("Сначала загрузите таблицу", "Внимание!", MessageBoxButton.OK);
+            }
         }
-
-        
     }
 }
